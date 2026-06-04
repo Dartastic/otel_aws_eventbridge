@@ -2,7 +2,6 @@
 // Copyright 2025-2026 Mindful Software LLC d/b/a Dartastic.io, All rights reserved.
 
 import 'package:dartastic_opentelemetry/dartastic_opentelemetry.dart';
-import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 
 import 'otel_aws_eventbridge_suppression.dart';
 
@@ -50,45 +49,58 @@ Future<T> tracedAwsEventBridge<T>({
   final t = tracer ?? OTel.tracerProvider().getTracer('otel_aws_eventbridge');
   final span = t.startSpan('eventbridge $operation', kind: SpanKind.producer);
   try {
-    span.setStringAttribute('messaging.system', 'aws_eventbridge');
+    span.addAttributes(OTel.attributes(
+        [OTel.attributeString('messaging.system', 'aws_eventbridge')]));
     final r = await invoke();
     final res = r.result;
     if (res != null) {
       if (res.busName != null) {
-        span.setStringAttribute('messaging.destination.name', res.busName!);
+        span.addAttributes(OTel.attributes([
+          OTel.attributeString('messaging.destination.name', res.busName!)
+        ]));
       }
       if (res.ruleName != null) {
-        span.setStringAttribute('aws.eventbridge.rule', res.ruleName!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeString('aws.eventbridge.rule', res.ruleName!)]));
       }
       if (res.eventId != null) {
-        span.setStringAttribute('messaging.message.id', res.eventId!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeString('messaging.message.id', res.eventId!)]));
       }
       if (res.source != null) {
-        span.setStringAttribute('aws.eventbridge.source', res.source!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeString('aws.eventbridge.source', res.source!)]));
       }
       if (res.detailType != null) {
-        span.setStringAttribute('aws.eventbridge.detail_type', res.detailType!);
+        span.addAttributes(OTel.attributes([
+          OTel.attributeString('aws.eventbridge.detail_type', res.detailType!)
+        ]));
       }
       if (res.target != null) {
-        span.setStringAttribute('aws.eventbridge.target', res.target!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeString('aws.eventbridge.target', res.target!)]));
       }
       if (res.region != null) {
-        span.setStringAttribute('cloud.region', res.region!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeString('cloud.region', res.region!)]));
       }
       if (res.statusCode != null) {
-        span.setIntAttribute('http.response.status_code', res.statusCode!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeInt('http.response.status_code', res.statusCode!)]));
       }
       if (res.errorCode != null) {
-        span.setStringAttribute('eventbridge.error.code', res.errorCode!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeString('eventbridge.error.code', res.errorCode!)]));
       }
-      final fail =
-          res.errorCode != null ||
+      final fail = res.errorCode != null ||
           (res.statusCode != null && res.statusCode! >= 400);
       if (fail) {
-        span.setStringAttribute(
-          ErrorResource.errorType.key,
-          res.errorCode ?? 'eventbridge.error',
-        );
+        span.addAttributes(OTel.attributes([
+          OTel.attributeString(
+            ErrorResource.errorType.key,
+            res.errorCode ?? 'eventbridge.error',
+          )
+        ]));
         span.setStatus(SpanStatusCode.Error, res.errorMessage);
       }
     }
