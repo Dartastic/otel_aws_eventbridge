@@ -1,7 +1,7 @@
-// Licensed under the Dartastic Pro Software License Agreement.
+// Licensed under the Apache License, Version 2.0
 // Copyright 2025-2026 Mindful Software LLC d/b/a Dartastic.io, All rights reserved.
 
-import 'package:dartastic_opentelemetry/dartastic_opentelemetry.dart';
+import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 
 import 'otel_aws_eventbridge_suppression.dart';
 
@@ -40,64 +40,68 @@ class AwsEventBridgeCallResult<T> {
 Future<T> tracedAwsEventBridge<T>({
   required String operation,
   required Future<AwsEventBridgeCallResult<T>> Function() invoke,
-  Tracer? tracer,
+  APITracer? tracer,
 }) async {
   if (awsEventBridgeInstrumentationSuppressed()) {
     final r = await invoke();
     return r.value;
   }
-  final t = tracer ?? OTel.tracerProvider().getTracer('otel_aws_eventbridge');
+  final t =
+      tracer ?? OTelAPI.tracerProvider().getTracer('otel_aws_eventbridge');
   final span = t.startSpan('eventbridge $operation', kind: SpanKind.producer);
   try {
-    span.addAttributes(OTel.attributes(
-        [OTel.attributeString('messaging.system', 'aws_eventbridge')]));
+    span.addAttributes(OTelAPI.attributes(
+        [OTelAPI.attributeString('messaging.system', 'aws_eventbridge')]));
     final r = await invoke();
     final res = r.result;
     if (res != null) {
       if (res.busName != null) {
-        span.addAttributes(OTel.attributes([
-          OTel.attributeString('messaging.destination.name', res.busName!)
+        span.addAttributes(OTelAPI.attributes([
+          OTelAPI.attributeString('messaging.destination.name', res.busName!)
         ]));
       }
       if (res.ruleName != null) {
-        span.addAttributes(OTel.attributes(
-            [OTel.attributeString('aws.eventbridge.rule', res.ruleName!)]));
+        span.addAttributes(OTelAPI.attributes(
+            [OTelAPI.attributeString('aws.eventbridge.rule', res.ruleName!)]));
       }
       if (res.eventId != null) {
-        span.addAttributes(OTel.attributes(
-            [OTel.attributeString('messaging.message.id', res.eventId!)]));
+        span.addAttributes(OTelAPI.attributes(
+            [OTelAPI.attributeString('messaging.message.id', res.eventId!)]));
       }
       if (res.source != null) {
-        span.addAttributes(OTel.attributes(
-            [OTel.attributeString('aws.eventbridge.source', res.source!)]));
+        span.addAttributes(OTelAPI.attributes(
+            [OTelAPI.attributeString('aws.eventbridge.source', res.source!)]));
       }
       if (res.detailType != null) {
-        span.addAttributes(OTel.attributes([
-          OTel.attributeString('aws.eventbridge.detail_type', res.detailType!)
+        span.addAttributes(OTelAPI.attributes([
+          OTelAPI.attributeString(
+              'aws.eventbridge.detail_type', res.detailType!)
         ]));
       }
       if (res.target != null) {
-        span.addAttributes(OTel.attributes(
-            [OTel.attributeString('aws.eventbridge.target', res.target!)]));
+        span.addAttributes(OTelAPI.attributes(
+            [OTelAPI.attributeString('aws.eventbridge.target', res.target!)]));
       }
       if (res.region != null) {
-        span.addAttributes(OTel.attributes(
-            [OTel.attributeString('cloud.region', res.region!)]));
+        span.addAttributes(OTelAPI.attributes(
+            [OTelAPI.attributeString('cloud.region', res.region!)]));
       }
       if (res.statusCode != null) {
-        span.addAttributes(OTel.attributes(
-            [OTel.attributeInt('http.response.status_code', res.statusCode!)]));
+        span.addAttributes(OTelAPI.attributes([
+          OTelAPI.attributeInt('http.response.status_code', res.statusCode!)
+        ]));
       }
       if (res.errorCode != null) {
-        span.addAttributes(OTel.attributes(
-            [OTel.attributeString('eventbridge.error.code', res.errorCode!)]));
+        span.addAttributes(OTelAPI.attributes([
+          OTelAPI.attributeString('eventbridge.error.code', res.errorCode!)
+        ]));
       }
       final fail = res.errorCode != null ||
           (res.statusCode != null && res.statusCode! >= 400);
       if (fail) {
-        span.addAttributes(OTel.attributes([
-          OTel.attributeString(
-            ErrorResource.errorType.key,
+        span.addAttributes(OTelAPI.attributes([
+          OTelAPI.attributeString(
+            ErrorAttributes.errorType.key,
             res.errorCode ?? 'eventbridge.error',
           )
         ]));
