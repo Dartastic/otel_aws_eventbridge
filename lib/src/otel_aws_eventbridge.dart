@@ -6,6 +6,7 @@ import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 import 'otel_aws_eventbridge_suppression.dart';
 
 class AwsEventBridgeResult {
+  /// Creates a result.
   const AwsEventBridgeResult({
     this.busName,
     this.ruleName,
@@ -31,8 +32,13 @@ class AwsEventBridgeResult {
   final String? errorMessage;
 }
 
+/// What a traced call returned: the value for the caller plus fields
+/// recorded on the span.
 class AwsEventBridgeCallResult<T> {
+  /// Creates a call result.
   const AwsEventBridgeCallResult({required this.value, this.result});
+
+  /// The value returned to the caller.
   final T value;
   final AwsEventBridgeResult? result;
 }
